@@ -2,8 +2,8 @@ from flask import Flask, render_template, flash
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField
-from wtforms.validators import DataRequired
+from wtforms import StringField, SubmitField, PasswordField, BooleanField, ValidationError
+from wtforms.validators import DataRequired, Length
 from werkzeug.security import generate_password_hash, check_password_hash
 # from datetime import datetime
 
@@ -16,6 +16,7 @@ CORS(app)
 class RegisterForm(FlaskForm):
     name = StringField('Enter your name', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired()])
+    password_hash = PasswordField('Password', validators=[DataRequired()])
     submit = SubmitField('submit')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///carpool.db'
@@ -64,15 +65,18 @@ def sign_up():
     if form.validate_on_submit():
         user = Users.query.filter_by(email=form.email.data).first()
         if user is None:
-            user = Users(name=form.name.data, email=form.email.data)
+            # hash password
+            hashed_pw = generate_password_hash(form.password_hash.data, 'sha256')
+            user = Users(name=form.name.data, email=form.email.data, password_hash=form.hashed_pw)
             db.session.add(user)
             db.session.commit()
         name = form.name.data 
         # clear form
         form.name.data = ''   
         form.email.data = ''
+        form.password_hash.data = ''
         # flash message
         flash('User Added!')
     # return all users by id 
     our_users = Users.query.order_by(Users.id)       
-    return render_template('register.html', name = name, form = form, our_users=our_users)
+    return render_template('/register.html', name = name, form = form, our_users=our_users)
