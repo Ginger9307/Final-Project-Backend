@@ -1,16 +1,16 @@
 from datetime import datetime
-from email.policy import default
-from xml.etree.ElementInclude import include
 from flaskserver import db, ma
 # from flask_marshmallow import auto_field
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField
+from wtforms import StringField, SubmitField, PasswordField
 from wtforms.validators import DataRequired
 from werkzeug.security import generate_password_hash, check_password_hash
 
 class RegisterForm(FlaskForm):
+    username = StringField('Enter your username', validators=[DataRequired()])
     name = StringField('Enter your name', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired()])
+    password_hash = PasswordField('Password', validators=[DataRequired()])
     submit = SubmitField('submit')
 
 class User(db.Model):

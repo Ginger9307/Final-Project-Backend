@@ -1,7 +1,9 @@
 from flaskserver.controllers import users
-from flaskserver.models import User, Car, UserSchema, CarSchema
+from flaskserver.models import User, Car, UserSchema, CarSchema, RegisterForm
 from flaskserver import app, db
-from flask import request,jsonify
+from flask import request, jsonify, flash, render_template
+from werkzeug.security import generate_password_hash
+
 
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
@@ -39,6 +41,31 @@ def get_all_cars():
 def get_user_car(id):
     user_car = db.session.query(Car.id, Car.maker, Car.model, Car.reg_num, Car.seats, Car.user_id).join(User).filter(Car.user_id==id).all()
     return jsonify(cars_schema.dump(user_car))
+
+#Register
+@app.route('/register', methods=['GET','POST'])
+def sign_up():
+    name =''
+    form = RegisterForm()
+    # Validate Form, if email does not exist add to database
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user is None:
+            # hash password
+            hashed_pw = generate_password_hash(form.password_hash.data, 'sha256')
+            user = User(username=form.username.data, name=form.name.data, email=form.email.data, password_hash=hashed_pw)
+            db.session.add(user)
+            db.session.commit()
+        name = form.name.data 
+        # clear form
+        form.name.data = ''   
+        form.email.data = ''
+        form.password_hash.data = ''
+        # flash message
+        flash('User Added!')
+    # return all users by id 
+    our_users = User.query.order_by(User.id)
+    return render_template('/register.html', name = name, form = form, our_users=our_users) 
 
 #############################################################################
 
