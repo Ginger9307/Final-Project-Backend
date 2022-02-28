@@ -1,41 +1,46 @@
 from flaskserver.controllers import users
-from flaskserver.models import User, Car, UserSchema
-from flaskserver import app
+from flaskserver.models import User, Car, UserSchema, CarSchema
+from flaskserver import app, db
 from flask import request,jsonify
 
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
-
-#Testing Routes for DB
-@app.route('/test', methods=['GET'])
-def get_all_users():
-    users = User.query.all()
-    output = users_schema.dump(users)
-    print(output)
-    return jsonify(output)
+car_schema = CarSchema()
+cars_schema = CarSchema(many=True)
 
 #Default route to check the server is up and running
 @app.route('/')
 def home():
     return 'Hello World!'
 
-#Route to get all users and add new users
-@app.route('/users', methods=['GET', 'POST'])
-def all_users():
-    fns = {
-        'GET': users.showAll
-    }
-    resp, code = fns[request.method](request)
-    return jsonify(resp), code
+#Get All Users
+@app.route('/users', methods=['GET'])
+def get_all_users():
+    users = User.query.all()
+    output = users_schema.dump(users)
+    return jsonify(output)
 
-#Route for a particular user
-@app.route('/users/<int:user_id>', methods=['GET', 'PATCH'])
-def user_methods(user_id):
-    fns = {
-        'GET': users.showOne
-    }
-    resp, code = fns[request.method](request, user_id)
-    return jsonify(resp), code
+#Get User by ID
+@app.route('/users/<int:id>', methods=['GET'])
+def get_user(id):
+    user = User.query.filter_by(id = id).first()
+    output = user_schema.dump(user)
+    return jsonify(output)
+
+#Get All Cars
+@app.route('/cars', methods=['GET'])
+def get_all_cars():
+    cars = Car.query.all()
+    output = cars_schema.dump(cars)
+    return jsonify(output)
+
+#Get Cars from User ID
+@app.route('/users/<int:id>/cars', methods=['GET'])
+def get_user_car(id):
+    user_car = db.session.query(Car.id, Car.maker, Car.model, Car.reg_num, Car.seats, Car.user_id).join(User).filter(Car.user_id==id).all()
+    return jsonify(cars_schema.dump(user_car))
+
+#############################################################################
 
 #Route too see the review of the users
 @app.route('/users/<int:user_id>/reviews', methods=['GET', 'POST'])
