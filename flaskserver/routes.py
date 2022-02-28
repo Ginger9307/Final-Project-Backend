@@ -1,9 +1,18 @@
-from flask import Flask, jsonify, request
-from flask_cors import CORS
-from controllers import users
+from flaskserver.controllers import users
+from flaskserver.models import User, Car, UserSchema
+from flaskserver import app
+from flask import request,jsonify
 
-app = Flask(__name__)
-CORS(app)
+user_schema = UserSchema()
+users_schema = UserSchema(many=True)
+
+#Testing Routes for DB
+@app.route('/test', methods=['GET'])
+def get_all_users():
+    users = User.query.all()
+    output = users_schema.dump(users)
+    print(output)
+    return jsonify(output)
 
 #Default route to check the server is up and running
 @app.route('/')
@@ -66,7 +75,3 @@ def journey_passengers_status():
 @app.route('/journeys/<int:journey_id>/passengers/<int:passenger_id>/request', methods=['GET', 'POST', 'PATCH'])
 def journey_passenger_request():
     return "Here we should see the request of users trying to get in (still WIP)"
-
-
-if __name__ == "__main__":
-    app.run(debug= True)
