@@ -1,15 +1,44 @@
+from datetime import datetime
+from email.policy import default
+from xml.etree.ElementInclude import include
 from flaskserver import db, ma
+# from flask_marshmallow import auto_field
+from flask_wtf import FlaskForm
+from wtforms import StringField, SubmitField
+from wtforms.validators import DataRequired
+from werkzeug.security import generate_password_hash, check_password_hash
+
+class RegisterForm(FlaskForm):
+    name = StringField('Enter your name', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired()])
+    submit = SubmitField('submit')
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=True, nullable = False)
     email = db.Column(db.String(120), unique=True, nullable = False)
     name = db.Column(db.String(20), nullable=False)
-    password = db.Column(db.String(60), nullable=False)
+    password_hash = db.Column(db.String(60))
+    points = db.Column(db.Integer, default = 0)
+    avg_rating = db.Column(db.Integer, default= 0)
     car = db.relationship('Car', backref='owner', lazy=True)
 
+
+    #Password hashing
+    @property
+    def password(self):
+        raise AttributeError('password not readable')
+
+    @password.setter
+    def password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def verify_password(self, password):
+        return check_password_hash(self.password_hash, password)
+    
+    # What we return to the user
     def __repr__(self):
-        return f"User('{self.username}', '{self.email}', '{self.name}')"
+        return f"User('{self.username}', '{self.email}', '{self.name}', {self.password_hash}, {self.car})"
 
 class Car(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -22,7 +51,64 @@ class Car(db.Model):
     def __repr__(self):
         return f"Car('{self.model}', '{self.maker}', '{self.seats}')"
 
+class Review(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    content = db.Column(db.String(500))
+    journey_id = db.Column(db.Integer, db.ForeignKey('journey.id'), nullable=False)
+    rating = db.Column(db.Integer, default=5)
+
+    def __repr__(self):
+        return f"Review('{self.journey_id}', '{self.user_id}','{self.rating}'"
+
+class Journey(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    driver_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    num_pass = db.Column(db.Integer, nullable=False)
+    start_loc = db.Column(db.String, nullable=False)
+    end_loc = db.Column(db.String, nullable=False)
+    start_datetime = db.Column(db.DateTime, nullable=False, default = datetime.utcnow)
+    end_datetime = db.Column(db.DateTime)
+    start_lat = db.Column(db.Float)
+    start_long = db.Column(db.Float)
+    end_lat = db.Column(db.Float)
+    end_long = db.Column(db.Float)
+    status = db.Column(db.Boolean, default=True)
+
+    def __repr__(self):
+        return f"Journey('{self.driver_id}', '{self.num_pass}','{self.start_loc}', '{self.end_loc}', '{self.start_datetime}'"
+
+class Passenger(db.Model):
+    id = db.Column(db.Integer, primary_key = True)
+    journey_id = db.Column(db.Integer, db.ForeignKey('journey.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    req_status = db.Column(db.Boolean, default = True, nullable=False)
+
+###### SCHEMAS TO JSONIFY DATA ######
 class UserSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = User
+        
+class CarSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Car
+        include_fk = True
+        include_relationship = True
 
+class ReviewSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Review
+        include_fk = True
+        include_relationship = True
+        
+class JourneySchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Journey
+        include_fk = True
+        include_relationship = True
+
+class PassengerSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Passenger
+        include_fk = True
+        include_relationship = True
