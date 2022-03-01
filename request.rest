@@ -1,7 +1,7 @@
-###
+### Get all users
 GET http://localhost:5000/users
 
-###
+### Register a new User
 POST http://localhost:5000/register
 Content-Type: application/json
 
@@ -12,8 +12,23 @@ Content-Type: application/json
     "name" : "Test2"
 }
 
-###
-POST http://localhost:5000/users/2/cars
+### Login with credentials
+POST http://localhost:5000/login
+Content-Type: application/json
+
+{
+    "username" : "test2",
+    "password" : "password"
+}
+
+### Logout
+GET http://localhost:5000/logout
+
+### Get all cars
+GET http://localhost:5000/cars
+
+### Create car User
+POST http://localhost:5000/users/1/cars
 Content-Type: application/json
 
 {
@@ -23,14 +38,44 @@ Content-Type: application/json
     "seats" : 4
 }
 
-###
-POST http://localhost:5000/login
+### Get All Journeys
+GET http://localhost:5000/journeys
+
+### Create Journey
+POST http://localhost:5000/journeys
 Content-Type: application/json
 
 {
-    "username" : "test2",
-    "password" : "password"
+    "driver_id" : 1,
+    "num_pass" : 3,
+    "start_loc" : "Finsbury Park",
+    "start_datetime" : "10:00 am",
+    "start_lat" : 123.123,
+    "start_long" : 12313.234,
+    "end_loc" : "Crekenwell",
+    "end_lat" : 123123.234,
+    "end_long" : 1234.3242,
+    "end_datetime" : "10:35 am"
 }
 
-###
-GET http://localhost:5000/logout
+### Get All Reviews
+GET http://localhost:5000/reviews
+
+### Create Review for user
+POST http://localhost:5000/users/1/reviews
+Content-Type: application/json
+
+{
+    "journey_id" : 1,
+    "content" : "Pleasant experience with this driver, good music taste too.",
+    "rating" : 5
+}
+
+### Get All Reviews for a user
+GET http://localhost:5000/users/1/reviews
+
+### Get a specific review for a user
+GET http://localhost:5000/users/1/reviews/1
+
+### NOT YET Get All passenger-journey relations
+GET http://localhost:5000/p-j-relations
