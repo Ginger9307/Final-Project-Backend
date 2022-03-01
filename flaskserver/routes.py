@@ -1,14 +1,27 @@
+from crypt import methods
 from flaskserver.controllers import users
-from flaskserver.models import User, Car, UserSchema, CarSchema, RegisterForm
+from flaskserver.models import User, Car, UserSchema, CarSchema, RegisterForm, LoginForm, check_password_hash
 from flaskserver import app, db
-from flask import request, jsonify, flash, render_template
+from flask import request, jsonify, flash, render_template, redirect
 from werkzeug.security import generate_password_hash
+from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
+
 
 
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
 car_schema = CarSchema()
 cars_schema = CarSchema(many=True)
+
+# Flask_Login data
+login_manager = LoginManager() 
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+@login_manager.user_loader
+def load_user(user_id):
+	return User.query.get(int(user_id))
+
 
 #Default route to check the server is up and running
 @app.route('/')
@@ -58,6 +71,7 @@ def sign_up():
             db.session.commit()
         name = form.name.data 
         # clear form
+        form.username.data = ''
         form.name.data = ''   
         form.email.data = ''
         form.password_hash.data = ''
@@ -66,6 +80,38 @@ def sign_up():
     # return all users by id 
     our_users = User.query.order_by(User.id)
     return render_template('/register.html', name = name, form = form, our_users=our_users) 
+
+#Login Page 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        if user:
+            # check hash
+            if check_password_hash(user.password_hash, form.password_hash.data):
+                login_user(user)
+                return redirect(url_for('dashboard')) 
+            else:
+                flash('Wrong Password - try again')
+        else:         
+            flash('User does not exist - try again')
+    return render_template('login.html', form=form)
+
+#Logout Page
+@app.route('/logout', methods=['GET', 'POST'])
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
+#Dashboard Page
+@app.route('/dashboard', methods=['GET', 'POST'])
+@login_required
+def dashboard():
+    return render_template('dashboard.html')
+
+    
 
 #############################################################################
 
@@ -98,7 +144,7 @@ def journey_info():
 def journey_passengers():
     return 'Here we will see a list of passengers for a particular journey'
 
-#Route to accept/reject a passener entry
+#Route to accept/reject a passenger entry
 @app.route('/journeys/<int:journey_id>/passengers/<int:passenger_id>/status', methods=['GET', 'POST', 'PATCH', 'DELETE'])
 def journey_passengers_status():
     return "Here we should see and update the passengers' status in the journey (in or out of it)"

@@ -3,8 +3,17 @@ from flaskserver import db, ma
 # from flask_marshmallow import auto_field
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, PasswordField
-from wtforms.validators import DataRequired
+from wtforms.validators import DataRequired, EqualTo
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin
+
+
+# creates login form 
+class LoginForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired()])
+    password_hash = PasswordField('Password', validators=[DataRequired()])
+    submit = SubmitField('Submit')
+
 
 class RegisterForm(FlaskForm):
     username = StringField('Enter your username', validators=[DataRequired()])
@@ -13,7 +22,7 @@ class RegisterForm(FlaskForm):
     password_hash = PasswordField('Password', validators=[DataRequired()])
     submit = SubmitField('submit')
 
-class User(db.Model):
+class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=True, nullable = False)
     email = db.Column(db.String(120), unique=True, nullable = False)

@@ -15,8 +15,13 @@
         {{ form.name() }}
         {{ form.email.label }}
         {{ form.email() }}
+        <br>
         {{ form.password_hash.label }}
         {{ form.password_hash() }}
+        <br>
+        <!-- confirm password 
+        {{ form.password_hash2.label }}
+        {{ form.password_hash() }} -->
         <br>
         {{ form.hidden_tag() }}
         {{ form.submit()}}
