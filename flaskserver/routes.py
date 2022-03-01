@@ -1,19 +1,78 @@
 from flaskserver.controllers import users
-from flaskserver.models import User, Car, UserSchema, CarSchema, RegisterForm
-from flaskserver import app, db
-from flask import request, jsonify, flash, render_template
-from werkzeug.security import generate_password_hash
+from flaskserver.models import User, Car, Review, Journey, UserSchema, CarSchema, ReviewSchema, JourneySchema, RegisterForm
+from flaskserver import app, db, login_manager
+from flask import request, jsonify, flash, render_template, redirect
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import login_user, login_required, logout_user
 
+#Login Helpers
+@login_manager.user_loader
+def load_user(user_id):
+	return User.query.get(int(user_id))
 
+#Load schemas
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
 car_schema = CarSchema()
 cars_schema = CarSchema(many=True)
+review_schema = ReviewSchema()
+reviews_schema = ReviewSchema(many=True)
+journey_schema = JourneySchema()
+journeys_schema = JourneySchema(many=True)
+
 
 #Default route to check the server is up and running
 @app.route('/')
 def home():
     return 'Hello World!'
+
+#Login Page 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    try:
+        username = request.json['username']
+        password = request.json['password']
+        user = User.query.filter_by(username=username).first()
+        if user:
+            #verify password
+            value = check_password_hash(user.password_hash, password)
+            if user and value:
+                    login_user(user)
+                    return jsonify({"Success": True})
+            else:
+                return jsonify({"Error": "Wrong Password"})
+        else:
+            return jsonify({"Error": "User not found"})
+    except Exception as e:
+        return jsonify({"Error": "Can't login"})
+
+#Logout Page
+@app.route('/logout', methods=['GET', 'POST'])
+def logout():
+    try:
+        logout_user()
+        return  jsonify({"Success": "logout succesful"})
+    except Exception as e:
+        return jsonify({"Error": "Could not logout"})
+
+#Create new User
+@app.route('/register', methods=['POST'])
+def register():
+    try:
+        name = request.json['name']
+        username= request.json['username']
+        email= request.json['email']
+        password= request.json['password']
+
+        #hash password
+        hashed_pw = generate_password_hash(password, 'sha256')
+        new_user = User(name = name, username = username, password=hashed_pw, email=email)
+        db.session.add(new_user)
+        db.session.commit()
+
+        return user_schema.jsonify(new_user)
+    except Exception as e:
+        return jsonify({"Error": "Can't create user"})
 
 #Get All Users
 @app.route('/users', methods=['GET'])
@@ -24,6 +83,7 @@ def get_all_users():
 
 #Get User by ID
 @app.route('/users/<int:id>', methods=['GET'])
+@login_required
 def get_user(id):
     user = User.query.filter_by(id = id).first()
     output = user_schema.dump(user)
@@ -40,58 +100,71 @@ def get_all_cars():
 @app.route('/users/<int:id>/cars', methods=['GET'])
 def get_user_car(id):
     user_car = db.session.query(Car.id, Car.maker, Car.model, Car.reg_num, Car.seats, Car.user_id).join(User).filter(Car.user_id==id).all()
+    print(user_car)
     return jsonify(cars_schema.dump(user_car))
 
-#Register
-@app.route('/register', methods=['GET','POST'])
-def sign_up():
-    name =''
-    form = RegisterForm()
-    # Validate Form, if email does not exist add to database
-    if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
-        if user is None:
-            # hash password
-            hashed_pw = generate_password_hash(form.password_hash.data, 'sha256')
-            user = User(username=form.username.data, name=form.name.data, email=form.email.data, password_hash=hashed_pw)
-            db.session.add(user)
-            db.session.commit()
-        name = form.name.data 
-        # clear form
-        form.name.data = ''   
-        form.email.data = ''
-        form.password_hash.data = ''
-        # flash message
-        flash('User Added!')
-    # return all users by id 
-    our_users = User.query.order_by(User.id)
-    return render_template('/register.html', name = name, form = form, our_users=our_users) 
+#Create Cars from User ID
+@app.route('/users/<int:id>/cars', methods=['POST'])
+def create_user_car(id):
+    try:
+        model = request.json['model']
+        maker = request.json['maker']
+        reg_num = request.json['reg_num']
+        seats = request.json['seats']
 
-#############################################################################
+        new_car = Car(model=model, maker=maker, reg_num=reg_num, seats=seats, user_id=id)
+        db.session.add(new_car)
+        db.session.commit()
 
-#Route too see the review of the users
-@app.route('/users/<int:user_id>/reviews', methods=['GET', 'POST'])
-def user_reviews(user_id):
-    fns = {
-        'GET': users.reviews
-    }
-    resp, code = fns[request.method](request, user_id)
-    return jsonify(resp), code
+        return car_schema.jsonify(new_car)
+    except Exception as e:
+        return jsonify({"Error": "Can't create car"})
 
-#Route to see car registered by the users
-@app.route('/users/<int:user_id>/car', methods=['GET', 'POST', 'PATCH', 'DELETE'])
-def user_car():
-    return 'Here we will see the cars registered by the users'
+#Get Reviews from User ID
+@app.route('/users/<int:id>/reviews', methods=['GET'])
+def get_user_reviews(id):
+    user_reviews = db.session.query(Review.id, Review.journey_id, Review.content, Review.rating, Review.user_id).join(User).filter(Review.user_id==id).all()
+    print(user_reviews)
+    return jsonify(reviews_schema.dump(user_reviews))
 
-#Route to see all journeys
-@app.route('/journeys', methods=['GET', 'POST', 'PATCH'])
-def all_journeys():
-    return 'Here we will see a list of journeys and their details'
+#Get All Journeys
+@app.route('/journeys', methods=['GET'])
+def get_journeys():
+    journeys = Journey.query.all()
+    return jsonify(journeys_schema.dump(journeys))
+
+#Add a new Journey
+@app.route('/journeys', methods=['POST'])
+def create_journey():
+    try:
+        driver_id = request.json['driver_id']
+        num_pass = request.json['num_pass']
+        start_loc = request.json['start_loc']
+        end_loc = request.json['end_loc']
+        start_datetime = request.json['start_datetime']
+        end_datetime = request.json['end_datetime']
+        start_lat = request.json['start_lat']
+        start_long = request.json['start_long']
+        end_lat = request.json['end_lat']
+        end_long = request.json['end_long']
+
+        new_journey = Journey(driver_id = driver_id, num_pass=num_pass,start_loc=start_loc,
+        end_loc=end_loc, start_datetime=start_datetime, end_datetime=end_datetime, start_lat=start_lat, end_lat=end_lat, start_long=start_long, end_long=end_long)
+        db.session.add(new_journey)
+        db.session.commit()
+
+        return journey_schema.jsonify(new_journey)
+    except Exception as e:
+        return jsonify({"Error": "Can't create new journey"})
 
 #Route to see the details of a particular journey
 @app.route('/journeys/<int:journey_id>', methods=['GET'])
 def journey_info():
     return 'Here we will see the details of a specific journey'
+
+
+
+#############################################################################
 
 #Route to see all passengers wanting to join a journey
 @app.route('/journeys/<int:journey_id>/passengers', methods=['GET', 'POST', 'PATCH', 'DELETE'])
