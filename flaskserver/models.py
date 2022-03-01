@@ -1,5 +1,6 @@
 from datetime import datetime
 from flaskserver import db, ma
+from flask_login import UserMixin
 # from flask_marshmallow import auto_field
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, PasswordField
@@ -13,12 +14,12 @@ class RegisterForm(FlaskForm):
     password_hash = PasswordField('Password', validators=[DataRequired()])
     submit = SubmitField('submit')
 
-class User(db.Model):
+class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=True, nullable = False)
     email = db.Column(db.String(120), unique=True, nullable = False)
     name = db.Column(db.String(20), nullable=False)
-    password_hash = db.Column(db.String(60))
+    password_hash = db.Column(db.String(120))
     points = db.Column(db.Integer, default = 0)
     avg_rating = db.Column(db.Integer, default= 0)
     car = db.relationship('Car', backref='owner', lazy=True)
@@ -67,8 +68,8 @@ class Journey(db.Model):
     num_pass = db.Column(db.Integer, nullable=False)
     start_loc = db.Column(db.String, nullable=False)
     end_loc = db.Column(db.String, nullable=False)
-    start_datetime = db.Column(db.DateTime, nullable=False, default = datetime.utcnow)
-    end_datetime = db.Column(db.DateTime)
+    start_datetime = db.Column(db.String, nullable=False, default = datetime.utcnow)
+    end_datetime = db.Column(db.String)
     start_lat = db.Column(db.Float)
     start_long = db.Column(db.Float)
     end_lat = db.Column(db.Float)
