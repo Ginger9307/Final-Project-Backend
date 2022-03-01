@@ -1,0 +1,36 @@
+###
+GET http://localhost:5000/users
+
+###
+POST http://localhost:5000/register
+Content-Type: application/json
+
+{
+    "username" : "test2",
+    "password" : "password",
+    "email" : "test2@gmail.com",
+    "name" : "Test2"
+}
+
+###
+POST http://localhost:5000/users/2/cars
+Content-Type: application/json
+
+{
+    "model" : "python",
+    "maker" : "ladders",
+    "reg_num" : "87sdf",
+    "seats" : 4
+}
+
+###
+POST http://localhost:5000/login
+Content-Type: application/json
+
+{
+    "username" : "test2",
+    "password" : "password"
+}
+
+###
+GET http://localhost:5000/logout

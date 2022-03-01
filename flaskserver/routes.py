@@ -2,13 +2,15 @@ from flaskserver.controllers import users
 from flaskserver.models import User, Car, Review, Journey, UserSchema, CarSchema, ReviewSchema, JourneySchema, RegisterForm
 from flaskserver import app, db, login_manager
 from flask import request, jsonify, flash, render_template, redirect
-from werkzeug.security import generate_password_hash, check_password_hash
+from flask_bcrypt import Bcrypt
 from flask_login import login_user, login_required, logout_user
 
 #Login Helpers
+bcrypt = Bcrypt()
 @login_manager.user_loader
 def load_user(user_id):
 	return User.query.get(int(user_id))
+
 
 #Load schemas
 user_schema = UserSchema()
@@ -35,8 +37,8 @@ def login():
         user = User.query.filter_by(username=username).first()
         if user:
             #verify password
-            value = check_password_hash(user.password_hash, password)
-            if user and value:
+            value = bcrypt.check_password_hash(user.password, password)
+            if value:
                     login_user(user)
                     return jsonify({"Success": True})
             else:
@@ -65,7 +67,7 @@ def register():
         password= request.json['password']
 
         #hash password
-        hashed_pw = generate_password_hash(password, 'sha256')
+        hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
         new_user = User(name = name, username = username, password=hashed_pw, email=email)
         db.session.add(new_user)
         db.session.commit()
@@ -126,6 +128,22 @@ def get_user_reviews(id):
     user_reviews = db.session.query(Review.id, Review.journey_id, Review.content, Review.rating, Review.user_id).join(User).filter(Review.user_id==id).all()
     print(user_reviews)
     return jsonify(reviews_schema.dump(user_reviews))
+
+#Create a Review using User ID
+@app.route('/users/<int:id>/reviews', methods=['POST'])
+def create_user_review(id):
+    try:
+        journey_id = request.json['journey_id']
+        content = request.json['content']
+        rating = request.json['rating']
+        
+        new_review = Review(journey_id = journey_id, content=content, rating=rating, user_id = id)
+        db.session.add(new_review)
+        db.session.commit()
+        print(new_review)
+        return review_schema.jsonify(new_review)
+    except Exception as e:
+        return jsonify({"Error": "Can't create review"})
 
 #Get All Journeys
 @app.route('/journeys', methods=['GET'])

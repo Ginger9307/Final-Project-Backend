@@ -1,11 +1,9 @@
 from datetime import datetime
 from flaskserver import db, ma
 from flask_login import UserMixin
-# from flask_marshmallow import auto_field
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, PasswordField
 from wtforms.validators import DataRequired
-from werkzeug.security import generate_password_hash, check_password_hash
 
 class RegisterForm(FlaskForm):
     username = StringField('Enter your username', validators=[DataRequired()])
@@ -19,27 +17,14 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(20), unique=True, nullable = False)
     email = db.Column(db.String(120), unique=True, nullable = False)
     name = db.Column(db.String(20), nullable=False)
-    password_hash = db.Column(db.String(120))
+    password = db.Column(db.String(20))
     points = db.Column(db.Integer, default = 0)
     avg_rating = db.Column(db.Integer, default= 0)
     car = db.relationship('Car', backref='owner', lazy=True)
-
-
-    #Password hashing
-    @property
-    def password(self):
-        raise AttributeError('password not readable')
-
-    @password.setter
-    def password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def verify_password(self, password):
-        return check_password_hash(self.password_hash, password)
     
     # What we return to the user
     def __repr__(self):
-        return f"User('{self.username}', '{self.email}', '{self.name}', {self.password_hash}, {self.car})"
+        return f"User('{self.username}', '{self.email}', '{self.name}', {self.car})"
 
 class Car(db.Model):
     id = db.Column(db.Integer, primary_key=True)
