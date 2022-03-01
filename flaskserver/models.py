@@ -20,11 +20,12 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(20))
     points = db.Column(db.Integer, default = 0)
     avg_rating = db.Column(db.Integer, default= 0)
-    car = db.relationship('Car', backref='owner', lazy=True)
-    
+    cars = db.relationship('Car', backref='owner', lazy=True)
+    reviews = db.relationship('Review', backref='user', lazy=True)
+
     # What we return to the user
     def __repr__(self):
-        return f"User('{self.username}', '{self.email}', '{self.name}', {self.car})"
+        return f"User('{self.username}', '{self.email}', '{self.name}', {self.cars})"
 
 class Car(db.Model):
     id = db.Column(db.Integer, primary_key=True)

@@ -1,5 +1,4 @@
-from flaskserver.controllers import users
-from flaskserver.models import User, Car, Review, Journey, UserSchema, CarSchema, ReviewSchema, JourneySchema, RegisterForm
+from flaskserver.models import Passenger, PassengerSchema, User, Car, Review, Journey, UserSchema, CarSchema, ReviewSchema, JourneySchema, PassengerSchema
 from flaskserver import app, db, login_manager
 from flask import request, jsonify, flash, render_template, redirect
 from flask_bcrypt import Bcrypt
@@ -21,7 +20,8 @@ review_schema = ReviewSchema()
 reviews_schema = ReviewSchema(many=True)
 journey_schema = JourneySchema()
 journeys_schema = JourneySchema(many=True)
-
+passenger_schema = PassengerSchema()
+passengers_schema = PassengerSchema(many=True)
 
 #Default route to check the server is up and running
 @app.route('/')
@@ -122,12 +122,25 @@ def create_user_car(id):
     except Exception as e:
         return jsonify({"Error": "Can't create car"})
 
+#Get All Reviews
+@app.route('/reviews', methods=['GET'])
+def get_all_reviews():
+    reviews = Review.query.all()
+    return jsonify(reviews_schema.dump(reviews))
+
 #Get Reviews from User ID
 @app.route('/users/<int:id>/reviews', methods=['GET'])
 def get_user_reviews(id):
     user_reviews = db.session.query(Review.id, Review.journey_id, Review.content, Review.rating, Review.user_id).join(User).filter(Review.user_id==id).all()
     print(user_reviews)
     return jsonify(reviews_schema.dump(user_reviews))
+
+#Get a specific review from a user
+@app.route('/users/<int:u_id>/reviews/<int:r_id>', methods=['GET'])
+def get_review(u_id, r_id):
+    review = db.session.query(Review.id, Review.journey_id, Review.content, Review.rating, Review.user_id).join(User).filter(Review.user_id==u_id).filter_by(id =r_id).first()
+    print(review)
+    return jsonify(review_schema.dump(review))
 
 #Create a Review using User ID
 @app.route('/users/<int:id>/reviews', methods=['POST'])
@@ -177,17 +190,19 @@ def create_journey():
 
 #Route to see the details of a particular journey
 @app.route('/journeys/<int:journey_id>', methods=['GET'])
-def journey_info():
-    return 'Here we will see the details of a specific journey'
+def journey_info(id):
+    journey = db.session.query(Journey.id, Journey.driver_id, Journey.num_pass, Journey.start_datetime, Journey.end_datetime, Journey.start_lat, Journey.start_long, Journey.start_loc, Journey.end_lat, Journey.end_long, Journey.end_loc).join(User).filter(Journey.driver_id==id).all()
+    return jsonify(journeys_schema.dump(journey))
 
-
+#Route to see all passenger-journey relations
+@app.route('/p-j-relations', methods=['GET'])
+def passengers_journey():
+    p_j = Passenger.query.all()
+    return jsonify(passenger_schema.dump(p_j))
 
 #############################################################################
 
-#Route to see all passengers wanting to join a journey
-@app.route('/journeys/<int:journey_id>/passengers', methods=['GET', 'POST', 'PATCH', 'DELETE'])
-def journey_passengers():
-    return 'Here we will see a list of passengers for a particular journey'
+
 
 #Route to accept/reject a passener entry
 @app.route('/journeys/<int:journey_id>/passengers/<int:passenger_id>/status', methods=['GET', 'POST', 'PATCH', 'DELETE'])
