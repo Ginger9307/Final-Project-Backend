@@ -168,6 +168,7 @@ def get_journeys():
 @app.route('/journeys', methods=['POST'])
 def create_journey():
     try:
+        # Get all parameters from post request
         driver_id = request.json['driver_id']
         num_pass = request.json['num_pass']
         start_loc = request.json['start_loc']
@@ -178,9 +179,11 @@ def create_journey():
         start_long = request.json['start_long']
         end_lat = request.json['end_lat']
         end_long = request.json['end_long']
-
+        # Create journey instance using parameters
         new_journey = Journey(driver_id = driver_id, num_pass=num_pass,start_loc=start_loc,
         end_loc=end_loc, start_datetime=start_datetime, end_datetime=end_datetime, start_lat=start_lat, end_lat=end_lat, start_long=start_long, end_long=end_long)
+        
+        # Add the instances and commit the changes
         db.session.add(new_journey)
         db.session.commit()
 
@@ -188,29 +191,99 @@ def create_journey():
     except Exception as e:
         return jsonify({"Error": "Can't create new journey"})
 
+#Route to change journey status to in progress
+@app.route('/journeys/<int:id>/start', methods=['PATCH'])
+def start_journey(id):
+    try:
+        journey = Journey.query.filter_by(id=id).first()
+        if journey:
+            status = request.json['status']
+            journey.status = status
+            db.session.add(journey)
+            db.session.commit()
+            return journey_schema.jsonify(journey)
+        else:
+            return jsonify({"Error": "Journey doesn't exist"})
+    except Exception as e:
+        return jsonify({"Error": "Can't start journey"})
+
+#Route to finish a journey
+@app.route('/journeys/<int:id>/complete', methods=['PATCH'])
+def complete_journey(id):
+    try:
+        journey = Journey.query.filter_by(id=id).first()
+        if journey:
+            status = request.json['status']
+            journey.status = status
+            db.session.add(journey)
+            db.session.commit()
+            return journey_schema.jsonify(journey)
+        else:
+            return jsonify({"Error": "Journey doesn't exist"})
+    except Exception as e:
+        return jsonify({"Error": "Can't mark journey as completed"})
+
+
+#Route to Cancel a journey as the driver
+@app.route('/journeys/<int:id>/cancel', methods=['PATCH'])
+def cancel_journey(id):
+    try:
+        journey = Journey.query.filter_by(id=id).first()
+        if journey:
+            status = request.json['status']
+            journey.status = status
+            db.session.add(journey)
+            db.session.commit()
+        return jsonify({"Success": "Journey Cancelled Successfully"})
+    except Exception as e:
+        return jsonify({"Error": "Can't cancel journey"})  
+
+
 #Route to see the details of a particular journey
-@app.route('/journeys/<int:journey_id>', methods=['GET'])
+@app.route('/journeys/<int:id>', methods=['GET'])
 def journey_info(id):
     journey = db.session.query(Journey.id, Journey.driver_id, Journey.num_pass, Journey.start_datetime, Journey.end_datetime, Journey.start_lat, Journey.start_long, Journey.start_loc, Journey.end_lat, Journey.end_long, Journey.end_loc).join(User).filter(Journey.driver_id==id).all()
     return jsonify(journeys_schema.dump(journey))
 
+#Route to see all passengers in a journey
+@app.route('/journeys/<int:id>/passengers', methods=['GET'])
+def journey_passengers(id):
+    passengers = User.query.join(User.journeys).filter_by(journey_id=id).all()
+    return jsonify(users_schema.dump(passengers))
+
 #Route to see all journeys from a user
 @app.route('/users/<int:id>/journeys', methods=['GET'])
-def passengers_journey(id):
-    journeys = Journeys_Users.query.filter_by(user_id=id).all()
+def all_passenger_journeys(id):
+    journeys = Journey.query.join(Journey.passengers).filter_by(user_id=id).all()
     print(journeys)
-    return jsonify(journey_users_schema.dump(journeys))
+    return jsonify(journeys_schema.dump(journeys))
 
-#############################################################################
+#Route to see a particular journey from a user
+@app.route('/users/<int:u_id>/journeys/<int:j_id>', methods=['GET'])
+def get_passenger_journey(u_id, j_id):
+    journey = Journey.query.join(Journey.passengers).filter_by(user_id=u_id).filter_by(journey_id=j_id).first()
+    return jsonify(journey_schema.dump(journey))
 
-
-
-#Route to accept/reject a passener entry
-@app.route('/journeys/<int:journey_id>/passengers/<int:passenger_id>/status', methods=['GET', 'POST', 'PATCH', 'DELETE'])
-def journey_passengers_status():
-    return "Here we should see and update the passengers' status in the journey (in or out of it)"
+#Route to update the status of a user in a journey
+@app.route('/users/<int:u_id>/journeys/<int:j_id>', methods=['PATCH'])
+def update_passenger_journey(u_id, j_id):
+    #get the info linking the passenger and the journey
+    passenger = Journeys_Users.query.filter_by(user_id=u_id).filter_by(journey_id=j_id).first()
+    #update the status of the passenger
+    passenger.status = request.json['status']
+    #add it to the DB and commit change
+    db.session.add(passenger)
+    db.session.commit()
+    return  jsonify(journey_user_schema.dump(passenger))
 
 #Route to request access to journey 
-@app.route('/journeys/<int:journey_id>/passengers/<int:passenger_id>/request', methods=['GET', 'POST', 'PATCH'])
-def journey_passenger_request():
-    return "Here we should see the request of users trying to get in (still WIP)"
+@app.route('/journeys/<int:j_id>/request', methods=['POST'])
+def journey_passenger_request(j_id):
+    journey = Journey.query.filter_by(id=j_id).first()
+    username = request.json['username']
+    passenger = User.query.filter_by(username=username).first()
+    # Create relation between journeys and users
+    ju = Journeys_Users(passenger = passenger, journey = journey, status='True')
+    db.session.add(ju)
+    db.session.commit()
+    return jsonify(journey_user_schema.dump(ju))

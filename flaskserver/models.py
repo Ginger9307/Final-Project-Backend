@@ -7,7 +7,7 @@ from flask_login import UserMixin
 class Journeys_Users(db.Model):
     journey_id = db.Column(db.ForeignKey('journey.id'), primary_key=True)
     user_id = db.Column(db.ForeignKey('user.id'), primary_key=True)
-    status = db.Column(db.Boolean, default=True)
+    status = db.Column(db.String, default='True')
 
     journey = db.relationship('Journey', back_populates='passengers')
     passenger = db.relationship('User', back_populates='journeys')
@@ -23,8 +23,8 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(20))
     points = db.Column(db.Integer, default = 0)
     avg_rating = db.Column(db.Integer, default= 5)
-    cars = db.relationship('Car', back_populates='owner', lazy=True)
-    reviews = db.relationship('Review', back_populates='user', lazy=True)
+    cars = db.relationship('Car', back_populates='owner', lazy=True, cascade="all, delete")
+    reviews = db.relationship('Review', back_populates='user', lazy=True, cascade="all, delete")
     journeys = db.relationship('Journeys_Users', back_populates='passenger', lazy='dynamic')
     journeys_driver = db.relationship('Journey', back_populates='driver', lazy=True)
 
