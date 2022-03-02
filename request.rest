@@ -6,10 +6,10 @@ POST http://localhost:5000/register
 Content-Type: application/json
 
 {
-    "username" : "test2",
+    "username" : "user1",
     "password" : "password",
-    "email" : "test2@gmail.com",
-    "name" : "Test2"
+    "email" : "user1@gmail.com",
+    "name" : "User"
 }
 
 ### Login with credentials
@@ -17,12 +17,15 @@ POST http://localhost:5000/login
 Content-Type: application/json
 
 {
-    "username" : "test2",
+    "username" : "user1",
     "password" : "password"
 }
 
 ### Logout
 GET http://localhost:5000/logout
+
+###
+GET http://localhost:5000/users/2
 
 ### Get all cars
 GET http://localhost:5000/cars
@@ -32,8 +35,8 @@ POST http://localhost:5000/users/1/cars
 Content-Type: application/json
 
 {
-    "model" : "python",
-    "maker" : "ladders",
+    "model" : "prius",
+    "maker" : "toyota",
     "reg_num" : "87sdf",
     "seats" : 4
 }
@@ -77,5 +80,5 @@ GET http://localhost:5000/users/1/reviews
 ### Get a specific review for a user
 GET http://localhost:5000/users/1/reviews/1
 
-### NOT YET Get All passenger-journey relations
-GET http://localhost:5000/p-j-relations
+### Get all journeys from User
+GET http://localhost:5000/users/1/journeys

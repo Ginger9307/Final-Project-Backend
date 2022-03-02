@@ -1,4 +1,4 @@
-from flaskserver.models import Passenger, PassengerSchema, User, Car, Review, Journey, UserSchema, CarSchema, ReviewSchema, JourneySchema, PassengerSchema
+from flaskserver.models import *
 from flaskserver import app, db, login_manager
 from flask import request, jsonify, flash, render_template, redirect
 from flask_bcrypt import Bcrypt
@@ -20,8 +20,8 @@ review_schema = ReviewSchema()
 reviews_schema = ReviewSchema(many=True)
 journey_schema = JourneySchema()
 journeys_schema = JourneySchema(many=True)
-passenger_schema = PassengerSchema()
-passengers_schema = PassengerSchema(many=True)
+journey_user_schema = Journeys_UsersSchema()
+journey_users_schema = Journeys_UsersSchema(many=True)
 
 #Default route to check the server is up and running
 @app.route('/')
@@ -194,11 +194,12 @@ def journey_info(id):
     journey = db.session.query(Journey.id, Journey.driver_id, Journey.num_pass, Journey.start_datetime, Journey.end_datetime, Journey.start_lat, Journey.start_long, Journey.start_loc, Journey.end_lat, Journey.end_long, Journey.end_loc).join(User).filter(Journey.driver_id==id).all()
     return jsonify(journeys_schema.dump(journey))
 
-#Route to see all passenger-journey relations
-@app.route('/p-j-relations', methods=['GET'])
-def passengers_journey():
-    p_j = Passenger.query.all()
-    return jsonify(passenger_schema.dump(p_j))
+#Route to see all journeys from a user
+@app.route('/users/<int:id>/journeys', methods=['GET'])
+def passengers_journey(id):
+    journeys = Journeys_Users.query.filter_by(user_id=id).all()
+    print(journeys)
+    return jsonify(journey_users_schema.dump(journeys))
 
 #############################################################################
 
