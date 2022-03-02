@@ -12,6 +12,7 @@ marshmallow-sqlalchemy = "*"
 flask-wtf = "*"
 flask-login = "*"
 flask-bcrypt = "*"
+flask-migrate = "*"
 
 [dev-packages]
 
