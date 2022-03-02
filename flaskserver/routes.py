@@ -197,15 +197,18 @@ def create_journey():
         num_pass = request.json['num_pass']
         start_loc = request.json['start_loc']
         end_loc = request.json['end_loc']
-        start_datetime = request.json['start_datetime']
-        end_datetime = request.json['end_datetime']
+        start_date = request.json['start_date']
+        start_time = request.json['start_time']
+        end_date = request.json['end_date']
+        end_time = request.json['end_time']
         start_lat = request.json['start_lat']
         start_long = request.json['start_long']
         end_lat = request.json['end_lat']
         end_long = request.json['end_long']
         # Create journey instance using parameters
         new_journey = Journey(driver_id = driver_id, num_pass=num_pass,start_loc=start_loc,
-        end_loc=end_loc, start_datetime=start_datetime, end_datetime=end_datetime, start_lat=start_lat, end_lat=end_lat, start_long=start_long, end_long=end_long)
+        end_loc=end_loc, start_date=start_date, start_time=start_time, end_date=end_date,
+        end_time=end_time, start_lat=start_lat, end_lat=end_lat, start_long=start_long, end_long=end_long)
         
         # Add the instances and commit the changes
         db.session.add(new_journey)

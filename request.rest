@@ -74,13 +74,15 @@ Content-Type: application/json
     "driver_id" : 1,
     "num_pass" : 5,
     "start_loc" : "Victoria",
-    "start_datetime" : "9:00 am",
+    "start_date" : "Jan 23rd",
+    "start_time" : "9:00 am",
     "start_lat" : 123.123,
     "start_long" : 12313.234,
     "end_loc" : "King's Cross",
     "end_lat" : 123123.234,
     "end_long" : 1234.3242,
-    "end_datetime" : "10:15 am"
+    "end_date" : "Jan 23rd",
+    "end_time" : "10:15 am"
 }
 
 ### Start Journey
