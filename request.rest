@@ -24,8 +24,10 @@ Content-Type: application/json
 ### Logout
 GET http://localhost:5000/logout
 
-###
+### Search a particular user
 GET http://localhost:5000/users/2
+
+##########################################################
 
 ### Get all cars
 GET http://localhost:5000/cars
@@ -41,6 +43,8 @@ Content-Type: application/json
     "seats" : 4
 }
 
+#########################################################
+
 ### Get All Journeys
 GET http://localhost:5000/journeys
 
@@ -50,16 +54,65 @@ Content-Type: application/json
 
 {
     "driver_id" : 1,
-    "num_pass" : 3,
-    "start_loc" : "Finsbury Park",
-    "start_datetime" : "10:00 am",
+    "num_pass" : 5,
+    "start_loc" : "Victoria",
+    "start_datetime" : "9:00 am",
     "start_lat" : 123.123,
     "start_long" : 12313.234,
-    "end_loc" : "Crekenwell",
+    "end_loc" : "King's Cross",
     "end_lat" : 123123.234,
     "end_long" : 1234.3242,
-    "end_datetime" : "10:35 am"
+    "end_datetime" : "10:15 am"
 }
+
+### Start Journey
+PATCH http://localhost:5000/journeys/2/start
+Content-Type: application/json
+
+{
+    "status" : "In progress"
+}
+
+### Mark Journey as Completed
+PATCH http://localhost:5000/journeys/2/complete
+Content-Type: application/json
+
+{
+    "status" : "Completed"
+}
+
+### Cancel Journey
+PATCH http://localhost:5000/journeys/2/cancel
+Content-Type: application/json
+
+{
+    "status" : "Cancelled"
+}
+### Get all journeys from User
+GET http://localhost:5000/users/3/journeys
+
+### Get all passengers/users in a journey
+GET http://localhost:5000/journeys/2/passengers
+
+### Get Particular journey from User
+GET http://localhost:5000/users/3/journeys/2
+
+### Request access to a journey
+POST http://localhost:5000/journeys/2/request
+Content-Type: application/json
+
+{
+    "username" : "user1"
+}
+
+### Reject a passenger
+PATCH http://localhost:5000/users/1/journeys/1
+Content-Type: application/json
+
+{
+    "status": "False"
+}
+########################################################
 
 ### Get All Reviews
 GET http://localhost:5000/reviews
@@ -80,5 +133,4 @@ GET http://localhost:5000/users/1/reviews
 ### Get a specific review for a user
 GET http://localhost:5000/users/1/reviews/1
 
-### Get all journeys from User
-GET http://localhost:5000/users/1/journeys
+#####################################################
