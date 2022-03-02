@@ -1,9 +1,18 @@
+from socket import socket
 from flaskserver.controllers import users
 from flaskserver.models import User, Car, Review, Journey, UserSchema, CarSchema, ReviewSchema, JourneySchema, RegisterForm
-from flaskserver import app, db, login_manager
+from flaskserver import app, db, login_manager, socketIO
 from flask import request, jsonify, flash, render_template, redirect
 from flask_bcrypt import Bcrypt
 from flask_login import login_user, login_required, logout_user
+from flask_socketio import SocketIO, send
+
+# sends message to every client listening to server
+@socketIO.on('message')
+def handleMessage(msg):
+    print(msg)
+    send(msg, broadcast=True)
+    return None
 
 #Login Helpers
 bcrypt = Bcrypt()

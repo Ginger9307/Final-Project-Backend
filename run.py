@@ -1,4 +1,9 @@
-from flaskserver import app
+from flaskserver import app, socketIO
+
+
+app.debug= True
+
+app.host = 'localhost'
 
 if __name__ == "__main__":
-    app.run(debug= True)
+    socketIO.run(app)

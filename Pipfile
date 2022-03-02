@@ -12,11 +12,12 @@ marshmallow-sqlalchemy = "*"
 flask-wtf = "*"
 flask-login = "*"
 flask-bcrypt = "*"
+flask-socketio = "*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.10"
+python_version = "3.9"
 
 [scripts]
 start = "flask run"
