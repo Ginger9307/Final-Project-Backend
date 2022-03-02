@@ -48,6 +48,24 @@ Content-Type: application/json
 ### Get All Journeys
 GET http://localhost:5000/journeys
 
+### Search Journey with both start and end
+POST http://localhost:5000/journeys/search
+Content-Type: application/json
+
+{
+    "start_loc" : "Victoria",
+    "end_loc" : "King's Cross"
+}
+
+### Search Journey with no start
+POST http://localhost:5000/journeys/search
+Content-Type: application/json
+
+{
+    "start_loc" : "",
+    "end_loc" : "King's Cross"
+}
+
 ### Create Journey
 POST http://localhost:5000/journeys
 Content-Type: application/json
