@@ -1,16 +1,19 @@
 from datetime import datetime
+from email.policy import default
 from flaskserver import db, ma
 from flask_login import UserMixin
-from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, PasswordField
-from wtforms.validators import DataRequired
 
-class RegisterForm(FlaskForm):
-    username = StringField('Enter your username', validators=[DataRequired()])
-    name = StringField('Enter your name', validators=[DataRequired()])
-    email = StringField('Email', validators=[DataRequired()])
-    password_hash = PasswordField('Password', validators=[DataRequired()])
-    submit = SubmitField('submit')
+
+class Journeys_Users(db.Model):
+    journey_id = db.Column(db.ForeignKey('journey.id'), primary_key=True)
+    user_id = db.Column(db.ForeignKey('user.id'), primary_key=True)
+    status = db.Column(db.Boolean, default=True)
+
+    journey = db.relationship('Journey', back_populates='passengers')
+    passenger = db.relationship('User', back_populates='journeys')
+
+    def __repr__(self):
+        return f"JU('{self.journey}', '{self.passenger}', '{self.status}')"
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -19,9 +22,11 @@ class User(db.Model, UserMixin):
     name = db.Column(db.String(20), nullable=False)
     password = db.Column(db.String(20))
     points = db.Column(db.Integer, default = 0)
-    avg_rating = db.Column(db.Integer, default= 0)
-    cars = db.relationship('Car', backref='owner', lazy=True)
-    reviews = db.relationship('Review', backref='user', lazy=True)
+    avg_rating = db.Column(db.Integer, default= 5)
+    cars = db.relationship('Car', back_populates='owner', lazy=True)
+    reviews = db.relationship('Review', back_populates='user', lazy=True)
+    journeys = db.relationship('Journeys_Users', back_populates='passenger', lazy='dynamic')
+    journeys_driver = db.relationship('Journey', back_populates='driver', lazy=True)
 
     # What we return to the user
     def __repr__(self):
@@ -34,6 +39,7 @@ class Car(db.Model):
     reg_num = db.Column(db.String(8), nullable=False)
     seats = db.Column(db.Integer, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    owner = db.relationship('User', back_populates='cars', lazy=True)
 
     def __repr__(self):
         return f"Car('{self.model}', '{self.maker}', '{self.seats}')"
@@ -44,6 +50,7 @@ class Review(db.Model):
     content = db.Column(db.String(500))
     journey_id = db.Column(db.Integer, db.ForeignKey('journey.id'), nullable=False)
     rating = db.Column(db.Integer, default=5)
+    user = db.relationship('User', back_populates='reviews', lazy=True)
 
     def __repr__(self):
         return f"Review('{self.journey_id}', '{self.user_id}','{self.rating}'"
@@ -51,6 +58,7 @@ class Review(db.Model):
 class Journey(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     driver_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    driver = db.relationship('User', back_populates = 'journeys_driver', lazy=True)
     num_pass = db.Column(db.Integer, nullable=False)
     start_loc = db.Column(db.String, nullable=False)
     end_loc = db.Column(db.String, nullable=False)
@@ -60,16 +68,12 @@ class Journey(db.Model):
     start_long = db.Column(db.Float)
     end_lat = db.Column(db.Float)
     end_long = db.Column(db.Float)
-    status = db.Column(db.Boolean, default=True)
+    status = db.Column(db.String, default='Active')
+    passengers = db.relationship('Journeys_Users', back_populates='journey', lazy='dynamic')
 
     def __repr__(self):
         return f"Journey('{self.driver_id}', '{self.num_pass}','{self.start_loc}', '{self.end_loc}', '{self.start_datetime}'"
 
-class Passenger(db.Model):
-    id = db.Column(db.Integer, primary_key = True)
-    journey_id = db.Column(db.Integer, db.ForeignKey('journey.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    req_status = db.Column(db.Boolean, default = True, nullable=False)
 
 ###### SCHEMAS TO JSONIFY DATA ######
 class UserSchema(ma.SQLAlchemyAutoSchema):
@@ -94,8 +98,8 @@ class JourneySchema(ma.SQLAlchemyAutoSchema):
         include_fk = True
         include_relationship = True
 
-class PassengerSchema(ma.SQLAlchemyAutoSchema):
+class Journeys_UsersSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
-        model = Passenger
+        model = Journeys_Users
         include_fk = True
         include_relationship = True
