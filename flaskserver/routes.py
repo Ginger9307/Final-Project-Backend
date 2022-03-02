@@ -164,6 +164,30 @@ def get_journeys():
     journeys = Journey.query.all()
     return jsonify(journeys_schema.dump(journeys))
 
+#Search for journeys that contain the start location
+@app.route('/journeys/search', methods=['POST'])
+def search_journeys():
+    start_loc = request.json['start_loc']
+    end_loc = request.json['end_loc']
+    if start_loc:
+        try:
+            journeys = Journey.query.filter(Journey.end_loc.ilike(end_loc)).all()
+            search = []
+            for j in journeys:
+                if start_loc in j.start_loc:
+                    search.append(j)
+                    return jsonify(journeys_schema.dump(search))
+        except Exception as e:
+            return jsonify({"Error": "Can't find journeys with that start and end location"})
+    else:
+        try:
+            journeys = Journey.query.filter(Journey.end_loc.ilike(end_loc)).all()
+            return jsonify(journeys_schema.dump(journeys))
+        except Exception as e:
+            return jsonify({"Error": "Can't find any journeys"})   
+    
+    
+
 #Add a new Journey
 @app.route('/journeys', methods=['POST'])
 def create_journey():
