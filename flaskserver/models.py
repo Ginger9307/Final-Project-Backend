@@ -75,7 +75,7 @@ class Journey(db.Model):
     passengers = db.relationship('Journeys_Users', back_populates='journey', lazy='dynamic')
 
     def __repr__(self):
-        return f"Journey('{self.driver_id}', '{self.num_pass}','{self.start_loc}', '{self.end_loc}', '{self.start_datetime}'"
+        return f"Journey('{self.driver_id}', '{self.num_pass}','{self.start_loc}', '{self.end_loc}'"
 
 
 ###### SCHEMAS TO JSONIFY DATA ######
