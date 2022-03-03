@@ -40,7 +40,8 @@ Content-Type: application/json
     "model" : "prius",
     "maker" : "toyota",
     "reg_num" : "87sdf",
-    "seats" : 4
+    "seats" : 4,
+    "fuel": "hybrid"
 }
 
 #########################################################
@@ -74,14 +75,14 @@ Content-Type: application/json
     "driver_id" : 1,
     "num_pass" : 5,
     "start_loc" : "Victoria",
-    "start_date" : "Jan 23rd",
+    "start_date" : "02.02.2022",
     "start_time" : "9:00 am",
-    "start_lat" : 123.123,
-    "start_long" : 12313.234,
-    "end_loc" : "King's Cross",
-    "end_lat" : 123123.234,
-    "end_long" : 1234.3242,
-    "end_date" : "Jan 23rd",
+    "start_lat" : 0.0,
+    "start_long" : 0.0,
+    "end_loc" : "Bath",
+    "end_lat" : 0.0,
+    "end_long" : 0.0,
+    "end_date" : "02.02.2022",
     "end_time" : "10:15 am"
 }
 

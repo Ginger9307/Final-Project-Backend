@@ -113,8 +113,8 @@ def create_user_car(id):
         maker = request.json['maker']
         reg_num = request.json['reg_num']
         seats = request.json['seats']
-
-        new_car = Car(model=model, maker=maker, reg_num=reg_num, seats=seats, user_id=id)
+        fuel = request.json['fuel']
+        new_car = Car(model=model, maker=maker, reg_num=reg_num, seats=seats, fuel=fuel, user_id=id)
         db.session.add(new_car)
         db.session.commit()
 

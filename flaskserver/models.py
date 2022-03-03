@@ -38,6 +38,7 @@ class Car(db.Model):
     maker = db.Column(db.String(20), nullable=False)
     reg_num = db.Column(db.String(8), nullable=False)
     seats = db.Column(db.Integer, nullable=False)
+    fuel = db.Column(db.String)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     owner = db.relationship('User', back_populates='cars', lazy=True)
 
