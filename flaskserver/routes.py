@@ -307,8 +307,8 @@ def update_passenger_journey(u_id, j_id):
 @app.route('/journeys/<int:j_id>/request', methods=['POST'])
 def journey_passenger_request(j_id):
     journey = Journey.query.filter_by(id=j_id).first()
-    username = request.json['username']
-    passenger = User.query.filter_by(username=username).first()
+    user_id = request.json['user_id']
+    passenger = User.query.filter_by(id=user_id).first()
     # Create relation between journeys and users
     ju = Journeys_Users(passenger = passenger, journey = journey, status='True')
     db.session.add(ju)
