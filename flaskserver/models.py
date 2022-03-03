@@ -3,15 +3,19 @@ from email.policy import default
 from flaskserver import db, ma
 from flask_login import UserMixin
 
-
+# Create object for the association table
 class Journeys_Users(db.Model):
+    # Relate the journey_id column to the id of a journey
     journey_id = db.Column(db.ForeignKey('journey.id'), primary_key=True)
+    # Relate the journey_id column to the id of a journey
     user_id = db.Column(db.ForeignKey('user.id'), primary_key=True)
+    # Add an extra column for the status of the passenger
     status = db.Column(db.String, default='True')
-
+    # Make the relation between journeys/passengers to the journey and user objects
     journey = db.relationship('Journey', back_populates='passengers')
     passenger = db.relationship('User', back_populates='journeys')
 
+    # Return the content to the user
     def __repr__(self):
         return f"JU('{self.journey}', '{self.passenger}', '{self.status}')"
 
